@@ -22,3 +22,12 @@ transformed source object.
 <p float="left" align="center">
   <img src="https://github.com/arashasg/Ransac-Sift-Matching-Alignment/blob/master/Images%20of%20Objects%20and%20the%20Scene/OutPut.PNG"  width="700px" height="350px"/>
 </p>
+
+## Sift image matching(Draw Object Outline)
+In this part, we want to draw the outline of each object in the scene. First We computed the Sift Feature Points in both object and the scene image. Afterward, we found matchings between two images. The matching are shown using lines in picture below. The four
+corners of the first image can be transformed to their locations in the second image
+using the function cv2.perspectiveTransform. The detected corners and the object are shown in a blue rectangle in the second image.
+### Ougput:
+<p float="left" align="center">
+  <img src="https://github.com/arashasg/Ransac-Sift-Matching-Alignment/blob/master/Images%20of%20Objects%20and%20the%20Scene/OutPut2.PNG"  width="700px" height="350px"/>
+</p>
