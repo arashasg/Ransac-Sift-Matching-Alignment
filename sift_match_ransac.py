@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+OBJ_ADDRESS = "./Images of Objects and the Scene/obj3.jpg"
+SCENE_ADDRESS = "./Images of Objects and the Scene/scene.jpg"
 
-I1 = cv2.imread('obj8.jpg')
-G1 = cv2.cvtColor(I1,cv2.COLOR_BGR2GRAY)
+I1 = cv2.imread(OBJ_ADDRESS)
+G1 = cv2.cvtColor(I1, cv2.COLOR_BGR2GRAY)
 
-I2 = cv2.imread('scene.jpg')
+I2 = cv2.imread(SCENE_ADDRESS)
 G2 = cv2.cvtColor(I2, cv2.COLOR_BGR2GRAY)
 
 sift = cv2.xfeatures2d.SIFT_create() # opencv 3
