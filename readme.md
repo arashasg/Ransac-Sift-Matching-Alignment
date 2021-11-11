@@ -1,7 +1,7 @@
 # Ransac-Sift-Matching-Alignment
 ## Image alignment
-We wanted to transform thefirst image to its location in the second image. First we detected corners and then drawn the 
-matchings betwenn the two images. Given these matchings, we can find the homography transform between the two images. At
+We wanted to transform the first image to its location in the second image. First we detected corners and then drawn the 
+matchings between the two images. Given these matchings, we can find the homography transform between the two images. At
 last, we created an image of transformed object picture. This can be done using the
 cv2.warpPerspective function before and the transformation matrix H obtained using RANSAC.
 The code alternatingly displays the second image and the
