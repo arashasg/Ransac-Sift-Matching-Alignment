@@ -1,58 +1,73 @@
 import numpy as np
 import cv2
-OBJ_ADDRESS = "./Images of Objects and the Scene/obj3.jpg"
+import glob
+
+OBJ_ADDRESS = "./Images of Objects and the Scene/"
 SCENE_ADDRESS = "./Images of Objects and the Scene/scene.jpg"
-
-I1 = cv2.imread(OBJ_ADDRESS)
-G1 = cv2.cvtColor(I1, cv2.COLOR_BGR2GRAY)
-
-I2 = cv2.imread(SCENE_ADDRESS)
-G2 = cv2.cvtColor(I2, cv2.COLOR_BGR2GRAY)
 
 sift = cv2.xfeatures2d.SIFT_create() # opencv 3
 # use "sift = cv2.SIFT()" if the above fails
 
-# detect keypoints and compute their descriptor vectors
-keypoints1, desc1 = sift.detectAndCompute(G1, None); # opencv 3
+I2 = cv2.imread(SCENE_ADDRESS)
+G2 = cv2.cvtColor(I2, cv2.COLOR_BGR2GRAY)
 keypoints2, desc2 = sift.detectAndCompute(G2, None); # opencv 3
 
-print("No. of keypoints1 =", len(keypoints1))
-print("No. of keypoints2 =", len(keypoints2))
+fnames = glob.glob(OBJ_ADDRESS + 'obj?.jpg')
+fnames.sort()
+for fname in fnames:
 
-print("Descriptors1.shape =", desc1.shape)
-print("Descriptors2.shape =", desc2.shape)
+    I1 = cv2.imread(fname)
+    G1 = cv2.cvtColor(I1,cv2.COLOR_BGR2GRAY)
+    keypoints1, desc1 = sift.detectAndCompute(G1, None); # opencv 3
+    
+    # brute-force matching
+    bf = cv2.BFMatcher()
 
-# stop here!!
-# exit() # comment this line out to move on!
+    # for each descriptor in desc1 find its
+    # two nearest neighbours in desc2
+    matches = bf.knnMatch(desc1,desc2, k=2)
 
-# brute-force matching
-bf = cv2.BFMatcher()
+    # distance ratio test
+    alpha = 0.75
+    good_matches = [m1 for m1,m2 in matches if m1.distance < alpha *m2.distance]
+    
+    points1 = [keypoints1[m.queryIdx].pt for m in good_matches]
+    points1 = np.array(points1,dtype=np.float32)
 
-# for each descriptor in desc1 find its
-# two nearest neighbours in desc2
-matches = bf.knnMatch(desc1,desc2, k=2)
+    points2 = [keypoints2[m.trainIdx].pt for m in good_matches]
+    points2 = np.array(points2,dtype=np.float32)
 
-good_matches = []
-alpha = 0.75
-for m1,m2 in matches:
-    # m1 is the best match
-    # m2 is the second best match
-    if m1.distance < alpha * m2.distance:
-        good_matches.append(m1)
+    H, mask = cv2.findHomography(points1, points2, cv2.RANSAC,5.0)
 
-# apply RANSAC
-points1 = [keypoints1[m.queryIdx].pt for m in good_matches]
-points1 = np.array(points1,dtype=np.float32)
+    # H = np.eye(3,dtype=np.float32) # this needs to be changed
 
-points2 = [keypoints2[m.trainIdx].pt for m in good_matches]
-points2 = np.array(points2,dtype=np.float32)
-H, mask = cv2.findHomography(points1, points2, cv2.RANSAC,5.0) # 5 pixels margin
-mask = mask.ravel().tolist()
-# print(mask)
 
-good_matches = [m for m,msk in zip(good_matches,mask) if msk == 1]
+    mask = mask.ravel().tolist()
+    # print(mask)
 
-I = cv2.drawMatches(I1,keypoints1,I2,keypoints2, good_matches, None)
+    good_matches = [m for m,msk in zip(good_matches,mask) if msk == 1]
 
-cv2.imshow('sift_keypoints1',I)
-cv2.waitKey(0)
+    print(I1.shape)
+    pts = np.float32([ [0,0],
+                       [0,I1.shape[0]],
+                       [I1.shape[1],I1.shape[0]],
+                       [I1.shape[1],0] ]).reshape(-1,1,2)
+    
+    dst = cv2.perspectiveTransform(pts,H).reshape(4,2)
+   
+    J = I2.copy()
+    print("dst is:")
+    dst = dst.astype(int)
+    print(dst)
+    cv2.line(J, (dst[0,0], dst[0,1]), (dst[1,0], dst[1,1]), (255,0,0),3)
+    cv2.line(J, (dst[1,0], dst[1,1]), (dst[2,0], dst[2,1]), (255,0,0),3)
+    cv2.line(J, (dst[2,0], dst[2,1]), (dst[3,0], dst[3,1]), (255,0,0),3)
+    cv2.line(J, (dst[3,0], dst[3,1]), (dst[0,0], dst[0,1]), (255,0,0),3)
+
+
+    I = cv2.drawMatches(I1,keypoints1,J,keypoints2,good_matches, None)
+
+    cv2.imshow('keypoints',I)
+
+    if cv2.waitKey() & 0xFF == ord('q'):
+        break
